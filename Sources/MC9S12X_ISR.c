@@ -66,13 +66,19 @@ void interrupt VectorNumber_Vrti RTI_ISR(void)
 		if (Time_Count >= 50) /* Delay 500ms time is arrived */
 		{
 		    Time_Count = 0;
-		     
-		    ret_val = Check_CANSendBuffer(MSCAN_Channel0, &S_Message);
 		    
-		    if (ret_val == 0) 
+		    /* Checking whether CAN module have enough TX buffer to send CAN message. */
+		    if (MSCAN_HardTxBufferCheck(MSCAN_Channel0) == 0) 
 		    {
-		        (void)MSCAN_SendFrame(&CANx_Module, &S_Message);
-		    } 
+    		    /* Checking soft CAN TX buffer have valid CAN message. */
+    		    ret_val = Check_CANSendBuffer(MSCAN_Channel0, &S_Message);
+    		    
+    		    /* If yes,load the read CAN message and send it. */
+    		    if (ret_val == 0) 
+    		    {
+    		        (void)MSCAN_SendFrame(&CANx_Module, &S_Message);
+    		    } 		        
+		    }
 		}
 	}
 }

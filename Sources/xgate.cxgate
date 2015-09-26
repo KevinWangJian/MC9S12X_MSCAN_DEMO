@@ -389,7 +389,7 @@ int16_t MSCAN_ReceiveFrame(MSCAN_ModuleConfig* CANx, MSCAN_MessageTypeDef* R_Fra
 
 
 /**
- * @brief   MSCAN received frame handler in XGATE.
+ * @brief   MSCAN0 received frame handler in XGATE.
  * @param   None
  * @returns None
  */
@@ -438,6 +438,11 @@ interrupt void MSCAN0Receive_Handler(void)
 
 
 
+/**
+ * @brief   MSCAN1 received frame handler in XGATE.
+ * @param   None
+ * @returns None
+ */
 interrupt void MSCAN1Receive_Handler(void) 
 {
     int16_t ret_val,j;
@@ -483,6 +488,11 @@ interrupt void MSCAN1Receive_Handler(void)
 
 
 
+/**
+ * @brief   MSCAN4 received frame handler in XGATE.
+ * @param   None
+ * @returns None
+ */
 interrupt void MSCAN4Receive_Handler(void) 
 {
     int16_t ret_val,j;

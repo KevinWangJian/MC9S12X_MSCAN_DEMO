@@ -1,7 +1,7 @@
 /**
   ******************************************************************************
   * @Copyright (C), 1997-2015, Hangzhou Gold Electronic Equipment Co., Ltd.
-  * @file name: MSCAN_Driver.h
+  * @file name: MSCAN_Driver.c
   * @author: Wangjian
   * @Descriptiuon: Provides a set of functions to help users to use MC9S12 MSCAN
   *                module.This functions can initialize CAN controller,send CAN
@@ -9,9 +9,14 @@
   *                Also,user can configure CAN module filters that will filter
   *                some CAN messages.
   * @Others: None
-  * @History: 1. Created by Wangjian.
-  * @version: V1.0.1
-  * @date:    18-Sep-2015
+  * @History: 1. Created by Wangjian.                                       (V1.0.0)
+  *           2. Add a select chance to decide whether CAN filter is enable or 
+  *              disable in configure CAN id filter function.
+  *              Also,move the CAN receive frame function to the XGATE.     (V1.0.1)
+  *           3. Add a functon which is Checking the specified CAN module whether 
+  *              have enough hard transmission buffer to send CAN messages. (V1.0.2)
+  * @version: V1.0.2
+  * @date:    26-Sep-2015
 
   ******************************************************************************
   * @attention
@@ -44,7 +49,7 @@
 /* Exported types ------------------------------------------------------------*/
 
 /* Declaration MSCAN driver version */
-#define   MSCAN_DRIVER_VERSION     (101)		/* Rev1.0.1 */
+#define   MSCAN_DRIVER_VERSION     (102)		/* Rev1.0.2 */
 
 
 
@@ -188,6 +193,10 @@ int16_t MSCAN_Init(MSCAN_ModuleConfig* CANx, MSCAN_ParametersConfig* Para_Config
 
 /* MSCAN send a frame by a chosen CAN module. */
 int16_t MSCAN_SendFrame(MSCAN_ModuleConfig* CANx, MSCAN_MessageTypeDef* W_Framebuff);
+
+
+/* Checking the specified CAN module whether have enough hard transmission buffer to send CAN messages. */
+int16_t MSCAN_HardTxBufferCheck(MSCAN_ChannelTypeDef CANx);
 
 
 /* MSCAN receive a frame by a chosen CAN module. */

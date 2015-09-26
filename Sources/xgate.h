@@ -32,10 +32,8 @@ volatile extern int shared_counter; /* volatile because both cores are accessing
 
 #pragma DATA_SEG __GPAGE_SEG PAGED_RAM
 /* Volatile CAN receive buffer because both cores and XGATE are accessing it */
-//extern volatile MSCAN_MessageTypeDef g_Intranet_ReceiveBuf[INTRANET_RECEIVEBUF_SIZE];
-//extern volatile MSCAN_MessageTypeDef g_ECU_ReceiveBuf[ECU_RECEIVEBUF_SIZE];
-//extern volatile MSCAN_MessageTypeDef g_Charger_ReceiveBuf[CHARGER_RECEIVEBUF_SIZE];
-extern volatile CANReceiveMessageBuffer_TypeDef g_CANx_RecBuffer; 
+extern volatile CANReceiveMessageBuffer_TypeDef g_CANx_RecBuffer;
+ 
 #pragma DATA_SEG DEFAULT
 
 #pragma pop									/* restore previous segment definitions */

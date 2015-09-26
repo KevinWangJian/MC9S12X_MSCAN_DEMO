@@ -1,7 +1,7 @@
 /**
   ******************************************************************************
   * @Copyright (C), 1997-2015, Hangzhou Gold Electronic Equipment Co., Ltd.
-  * @file name: MSCAN_Driver.h
+  * @file name: MSCAN_Driver.c
   * @author: Wangjian
   * @Descriptiuon: Provides a set of functions to help users to use MC9S12 MSCAN
   *                module.This functions can initialize CAN controller,send CAN
@@ -9,9 +9,14 @@
   *                Also,user can configure CAN module filters that will filter
   *                some CAN messages.
   * @Others: None
-  * @History: 1. Created by Wangjian.
-  * @version: V1.0.1
-  * @date:    18-Sep-2015
+  * @History: 1. Created by Wangjian.                                       (V1.0.0)
+  *           2. Add a select chance to decide whether CAN filter is enable or 
+  *              disable in configure CAN id filter function.
+  *              Also,move the CAN receive frame function to the XGATE.     (V1.0.1)
+  *           3. Add a functon which is Checking the specified CAN module whether 
+  *              have enough hard transmission buffer to send CAN messages. (V1.0.2)
+  * @version: V1.0.2
+  * @date:    26-Sep-2015
 
   ******************************************************************************
   * @attention
@@ -1532,6 +1537,43 @@ int16_t MSCAN_SendFrame(MSCAN_ModuleConfig* CANx, MSCAN_MessageTypeDef* W_Frameb
     return -1;   
 }
 
+
+
+/**
+ * @brief   Checking the specified CAN module whether have enough
+ *          hard transmission buffer to send CAN messages.
+ * @param   CANx, The specified MSCAN module.
+ * @returns 0: Calling succeeded.User can load CAN messages to send.
+ * 			-1: Calling failed.User can not load CAN messages to send.
+ */
+int16_t MSCAN_HardTxBufferCheck(MSCAN_ChannelTypeDef CANx) 
+{
+    uint8_t ret_val;
+    
+    if ((CANx < MSCAN_Channel0) || (CANx > MSCAN_Channel4))return -1;
+    
+    if (CANx == MSCAN_Channel0) 
+    {
+        ret_val = CAN0TFLG & CAN0TFLG_TXE_MASK;
+        
+        if (ret_val == 0)return -1;   /* All the TX buffer is full,that means user can load CAN messages to send. */
+    } 
+    else if (CANx == MSCAN_Channel1) 
+    {
+        ret_val = CAN1TFLG & CAN1TFLG_TXE_MASK;
+        
+        if (ret_val == 0)return -1;   /* All the TX buffer is full,that means user can load CAN messages to send. */
+    } 
+    else 
+    {
+        ret_val = CAN4TFLG & CAN4TFLG_TXE_MASK;
+        
+        if (ret_val == 0)return -1;   /* All the TX buffer is full,that means user can load CAN messages to send. */
+    }
+    
+    return 0;   /* If CANTFLG register value is not zero,that means there is at least one empty TX buffer,user can load
+                   CAN messages to send. */
+}
 
 /*****************************END OF FILE**************************************/
 

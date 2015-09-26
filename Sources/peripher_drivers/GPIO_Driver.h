@@ -3,11 +3,8 @@
   * @Copyright (C), 1997-2015, Hangzhou Gold Electronic Equipment Co., Ltd.
   * @file name: GPIO_Driver.h
   * @author: Wangjian
-  * @Descriptiuon: Provides a set of functions to help users to use MC9S12 MSCAN
-  *                module.This functions can initialize CAN controller,send CAN
-  *                messages by CAN module,receive CAN messages by CAN module.
-  *                Also,user can configure CAN module filters that will filter
-  *                some CAN messages.
+  * @Descriptiuon: Provide a set of functions about initialize GPIO ports,
+  *                Setting, clearing and toggling the specified GPIO pins.
   * @Others: None
   * @History: 1. Created by Wangjian.
   * @version: V1.0.0
