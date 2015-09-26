@@ -1,0 +1,652 @@
+
+#include <MC9S12XEQ512.h>
+#include <hidef.h>      /* common defines and macros */
+#include "derivative.h"
+#include "xgate.h"
+#include "common.h"
+#include "MSCAN_Driver.h"
+#include "CAN_Message.h"
+
+
+
+
+// put your handler variables here
+typedef struct 
+{
+  int counter;
+} MyDataType;
+
+static MyDataType MyData = {0};
+
+
+// interrupt handler
+interrupt void SoftwareTrigger0_Handler(MyDataType* __restrict pData) 
+{ 
+    // put your own code here
+    pData->counter++;
+    
+    if (pData->counter > 100)  
+    {
+        pData->counter= 0; 
+        shared_counter++;
+    }
+}
+
+
+// interrupt handler for all others
+interrupt void ErrorHandler(int dataptr) 
+{
+    int chanNum= dataptr;
+    
+    asm BRK;
+}
+
+
+
+
+/**
+ * @brief   MSCAN received a frame by a chosen CAN module.
+ * @param   CANx, The specified MSCAN module.
+ * 			*R_Framebuff: Data buffer that storing one CAN message which is received on CAN bus.
+ * @returns 0: Calling succeeded.
+ * 			-1: Calling failed.
+ */
+int16_t MSCAN_ReceiveFrame(MSCAN_ModuleConfig* CANx, MSCAN_MessageTypeDef* R_Framebuff)
+{
+    uint8_t IDE_Bit,RTR_Bit;
+    
+    uint8_t i;
+    
+    uint32_t IDHH,IDHL,IDHL1,IDHL2,IDLH,IDLL;
+    
+    if ((CANx != NULL) && (R_Framebuff != NULL))
+    {
+        if ((CANx->ch < MSCAN_Channel0) || (CANx->ch > MSCAN_Channel4))return -1;
+        
+        if ((CANx->pins < MSCAN0_PM0_PM1) || (CANx->pins > MSCAN4_PM6_PM7))return -1;
+        
+        if (CANx->ch == MSCAN_Channel0) 
+        {
+            /* 
+               Judge whether the receive FIFO is not empty and
+               a new message is available in the RxFG. 
+            */
+            if (CAN0RFLG_RXF) 
+            {
+                /* 
+                   The IDE_Bit variable indicate that the received frame ID type 
+                   is standard or extended format. 
+                */
+                IDE_Bit = (CAN0RXIDR1 & CAN0RXIDR1_IDE_MASK) >> 3;
+                
+                if (IDE_Bit != 0)  /* Extended ID format. */ 
+                {
+                    /* 
+                      The RTR_Bit variable indicate that the received frame type 
+                      is data frame or remote frame. 
+                    */
+                    RTR_Bit = CAN0RXIDR3 & CAN0RXIDR3_RTR_MASK;
+                    
+                    if (RTR_Bit != 0) 
+                    {
+                        R_Framebuff->frametype = RemoteFrameWithExtendedId;
+                    }
+                    else
+                    {
+                        R_Framebuff->frametype = DataFrameWithExtendedId;
+                    }
+                } 
+                else               /* Standard ID format. */
+                {
+                    /* 
+                      The RTR_Bit variable indicate that the received frame type 
+                      is data frame or remote frame. 
+                    */
+                    RTR_Bit = (CAN0RXIDR1 & CAN0RXIDR1_SRR_MASK) >> 4;
+                    
+                    if (RTR_Bit != 0) 
+                    {
+                        R_Framebuff->frametype = RemoteFrameWithStandardId;
+                    } 
+                    else
+                    {
+                        R_Framebuff->frametype = DataFrameWithStandardId;
+                    }
+                }
+                
+                if ((R_Framebuff->frametype == DataFrameWithStandardId)
+                   ||(R_Framebuff->frametype == RemoteFrameWithStandardId)) 
+                {
+                    IDHH = CAN0RXIDR0;
+                    IDHL = CAN0RXIDR1;
+                    
+                    IDHH = (uint32_t)(IDHH) << 3;
+                    IDHL = (uint32_t)(IDHL >> 5);
+                     
+                    R_Framebuff->frame_id = IDHH | IDHL;
+                }
+                else
+                {
+                    IDHH  = CAN0RXIDR0;
+                    IDHL1 = CAN0RXIDR1;
+                    IDHL2 = CAN0RXIDR1;
+                    IDLH  = CAN0RXIDR2;
+                    IDLL  = CAN0RXIDR3;
+                    
+                    IDHH = ((uint32_t)(IDHH)) << 21;
+                    IDHL1 = ((uint32_t)(IDHL1 >> 5)) << 18;
+                    IDHL2 = ((uint32_t)(IDHL2 & 0x07)) << 15;
+                    IDLH = (uint32_t)(IDLH) << 7;
+                    IDLL = IDLL >> 1;
+
+                    R_Framebuff->frame_id = (IDHH | IDHL1 | IDHL2 | IDLH | IDLL);
+                }
+                
+                if ((R_Framebuff->frametype == RemoteFrameWithStandardId)
+                   ||(R_Framebuff->frametype == RemoteFrameWithExtendedId))
+                {
+                    R_Framebuff->data_length = 0;
+                } 
+                else 
+                {
+                    R_Framebuff->data_length = CAN0RXDLR & 0x0Fu;
+                    
+                    for (i = 0;i < R_Framebuff->data_length; i++) 
+                    {
+                        if (i == 0)R_Framebuff->data[0] = CAN0RXDSR0;
+                        else if (i == 1)R_Framebuff->data[1] = CAN0RXDSR1;
+                        else if (i == 2)R_Framebuff->data[2] = CAN0RXDSR2;
+                        else if (i == 3)R_Framebuff->data[3] = CAN0RXDSR3;
+                        else if (i == 4)R_Framebuff->data[4] = CAN0RXDSR4;
+                        else if (i == 5)R_Framebuff->data[5] = CAN0RXDSR5;
+                        else if (i == 6)R_Framebuff->data[6] = CAN0RXDSR6;
+                        else if (i == 7)R_Framebuff->data[7] = CAN0RXDSR7;
+                    }
+                }
+                
+                /* Clear the RXF bits by writing 1 to the corresponding bits */
+                CAN0RFLG_RXF = CAN0RFLG_RXF_MASK;
+                
+                return 0;
+            }
+        } 
+        else if (CANx->ch == MSCAN_Channel1) 
+        {
+            /* 
+               Judge whether the receive FIFO is not empty and
+               a new message is available in the RxFG. 
+            */
+            if (CAN1RFLG_RXF) 
+            {
+                /* 
+                   The IDE_Bit variable indicate that the received frame ID type 
+                   is standard or extended format. 
+                */
+                IDE_Bit = (CAN1RXIDR1 & CAN1RXIDR1_IDE_MASK) >> 3;
+                
+                if (IDE_Bit != 0)  /* Extended ID format. */ 
+                {
+                    /* 
+                      The RTR_Bit variable indicate that the received frame type 
+                      is data frame or remote frame. 
+                    */
+                    RTR_Bit = CAN1RXIDR3 & CAN1RXIDR3_RTR_MASK;
+                    
+                    if (RTR_Bit != 0) 
+                    {
+                        R_Framebuff->frametype = RemoteFrameWithExtendedId;
+                    }
+                    else
+                    {
+                        R_Framebuff->frametype = DataFrameWithExtendedId;
+                    }
+                } 
+                else               /* Standard ID format. */
+                {
+                    /* 
+                      The RTR_Bit variable indicate that the received frame type 
+                      is data frame or remote frame. 
+                    */
+                    RTR_Bit = (CAN1RXIDR1 & CAN1RXIDR1_SRR_MASK) >> 4;
+                    
+                    if (RTR_Bit != 0) 
+                    {
+                        R_Framebuff->frametype = RemoteFrameWithStandardId;
+                    } 
+                    else
+                    {
+                        R_Framebuff->frametype = DataFrameWithStandardId;
+                    }
+                }
+                
+                if ((R_Framebuff->frametype == DataFrameWithStandardId)
+                   ||(R_Framebuff->frametype == RemoteFrameWithStandardId)) 
+                {
+                    IDHH = CAN1RXIDR0;
+                    IDHL = CAN1RXIDR1;
+                    
+                    IDHH = (uint32_t)(IDHH) << 3;
+                    IDHL = (uint32_t)(IDHL >> 5);
+                     
+                    R_Framebuff->frame_id = IDHH | IDHL;
+                }
+                else
+                {
+                    IDHH  = CAN1RXIDR0;
+                    IDHL1 = CAN1RXIDR1;
+                    IDHL2 = CAN1RXIDR1;
+                    IDLH  = CAN1RXIDR2;
+                    IDLL  = CAN1RXIDR3;
+                    
+                    IDHH = ((uint32_t)(IDHH)) << 21;
+                    IDHL1 = ((uint32_t)(IDHL1 >> 5)) << 18;
+                    IDHL2 = ((uint32_t)(IDHL2 & 0x07)) << 15;
+                    IDLH = (uint32_t)(IDLH) << 7;
+                    IDLL = IDLL >> 1;
+                    
+                    R_Framebuff->frame_id = (IDHH | IDHL1 | IDHL2 | IDLH | IDLL);
+                }
+                
+                if ((R_Framebuff->frametype == RemoteFrameWithStandardId)
+                   ||(R_Framebuff->frametype == RemoteFrameWithExtendedId))
+                {
+                    R_Framebuff->data_length = 0;
+                } 
+                else 
+                {
+                    R_Framebuff->data_length = CAN1RXDLR & 0x0Fu;
+                    
+                    for (i = 0;i < R_Framebuff->data_length; i++) 
+                    {
+                        if (i == 0)R_Framebuff->data[0] = CAN1RXDSR0;
+                        else if (i == 1)R_Framebuff->data[1] = CAN1RXDSR1;
+                        else if (i == 2)R_Framebuff->data[2] = CAN1RXDSR2;
+                        else if (i == 3)R_Framebuff->data[3] = CAN1RXDSR3;
+                        else if (i == 4)R_Framebuff->data[4] = CAN1RXDSR4;
+                        else if (i == 5)R_Framebuff->data[5] = CAN1RXDSR5;
+                        else if (i == 6)R_Framebuff->data[6] = CAN1RXDSR6;
+                        else if (i == 7)R_Framebuff->data[7] = CAN1RXDSR7;
+                    }
+                }
+                
+                /* Clear the RXF bits by writing 1 to the corresponding bits */
+                CAN1RFLG_RXF = CAN1RFLG_RXF_MASK;
+                
+                return 0;
+            }
+        } 
+        else if (CANx->ch == MSCAN_Channel4) 
+        {
+            /* 
+               Judge whether the receive FIFO is not empty and
+               a new message is available in the RxFG. 
+            */
+            if (CAN4RFLG_RXF) 
+            {
+                /* 
+                   The IDE_Bit variable indicate that the received frame ID type 
+                   is standard or extended format. 
+                */
+                IDE_Bit = (CAN4RXIDR1 & CAN4RXIDR1_IDE_MASK) >> 3;
+                
+                if (IDE_Bit != 0)  /* Extended ID format. */ 
+                {
+                    /* 
+                      The RTR_Bit variable indicate that the received frame type 
+                      is data frame or remote frame. 
+                    */
+                    RTR_Bit = CAN4RXIDR3 & CAN4RXIDR3_RTR_MASK;
+                    
+                    if (RTR_Bit != 0) 
+                    {
+                        R_Framebuff->frametype = RemoteFrameWithExtendedId;
+                    }
+                    else
+                    {
+                        R_Framebuff->frametype = DataFrameWithExtendedId;
+                    }
+                } 
+                else               /* Standard ID format. */
+                {
+                    /* 
+                      The RTR_Bit variable indicate that the received frame type 
+                      is data frame or remote frame. 
+                    */
+                    RTR_Bit = (CAN4RXIDR1 & CAN4RXIDR1_SRR_MASK) >> 4;
+                    
+                    if (RTR_Bit != 0) 
+                    {
+                        R_Framebuff->frametype = RemoteFrameWithStandardId;
+                    } 
+                    else
+                    {
+                        R_Framebuff->frametype = DataFrameWithStandardId;
+                    }
+                }
+                
+                if ((R_Framebuff->frametype == DataFrameWithStandardId)
+                   ||(R_Framebuff->frametype == RemoteFrameWithStandardId)) 
+                {
+                    IDHH = CAN4RXIDR0;
+                    IDHL = CAN4RXIDR1;
+                    
+                    IDHH = (uint32_t)(IDHH) << 3;
+                    IDHL = (uint32_t)(IDHL >> 5);
+                    
+                    R_Framebuff->frame_id = IDHH | IDHL;
+                }
+                else
+                {
+                    IDHH  = CAN4RXIDR0;
+                    IDHL1 = CAN4RXIDR1;
+                    IDHL2 = CAN4RXIDR1;
+                    IDLH  = CAN4RXIDR2;
+                    IDLL  = CAN4RXIDR3;
+                    
+                    IDHH = ((uint32_t)(IDHH)) << 21;
+                    IDHL1 = ((uint32_t)(IDHL1 >> 5)) << 18;
+                    IDHL2 = ((uint32_t)(IDHL2 & 0x07)) << 15;
+                    IDLH = (uint32_t)(IDLH) << 7;
+                    IDLL = IDLL >> 1;
+                    
+                    R_Framebuff->frame_id = (IDHH | IDHL1 | IDHL2 | IDLH | IDLL);
+                }
+                
+                if ((R_Framebuff->frametype == RemoteFrameWithStandardId)
+                   ||(R_Framebuff->frametype == RemoteFrameWithExtendedId))
+                {
+                    R_Framebuff->data_length = 0;
+                } 
+                else 
+                {
+                    R_Framebuff->data_length = CAN4RXDLR & 0x0Fu;
+                    
+                    for (i = 0;i < R_Framebuff->data_length; i++) 
+                    {
+                        if (i == 0)R_Framebuff->data[0] = CAN4RXDSR0;
+                        else if (i == 1)R_Framebuff->data[1] = CAN4RXDSR1;
+                        else if (i == 2)R_Framebuff->data[2] = CAN4RXDSR2;
+                        else if (i == 3)R_Framebuff->data[3] = CAN4RXDSR3;
+                        else if (i == 4)R_Framebuff->data[4] = CAN4RXDSR4;
+                        else if (i == 5)R_Framebuff->data[5] = CAN4RXDSR5;
+                        else if (i == 6)R_Framebuff->data[6] = CAN4RXDSR6;
+                        else if (i == 7)R_Framebuff->data[7] = CAN4RXDSR7;
+                    }
+                }
+                
+                /* Clear the RXF bits by writing 1 to the corresponding bits */
+                CAN4RFLG_RXF = CAN4RFLG_RXF_MASK;
+                
+                return 0;
+            }
+        }
+    }
+    
+    return -1;
+}
+
+
+
+
+/**
+ * @brief   MSCAN received frame handler in XGATE.
+ * @param   None
+ * @returns None
+ */
+interrupt void MSCAN0Receive_Handler(void) 
+{
+    int16_t ret_val,j;
+ 
+    MSCAN_ModuleConfig CAN_Module;
+    MSCAN_MessageTypeDef R_Message; 
+    
+    CAN_Module.ch   = MSCAN_Channel0;
+    CAN_Module.pins = MSCAN0_PM0_PM1;
+    
+    ret_val = MSCAN_ReceiveFrame(&CAN_Module, &R_Message); 
+           
+    if (0 == ret_val)   /* Receive CAN frame successfully */
+    {    
+        if (g_CANx_RecBuffer.Intranet_RecBuff_WPointer >= INTRANET_RECEIVEBUF_SIZE) 
+        {
+            g_CANx_RecBuffer.Intranet_RecBuff_WPointer = 0;
+        }
+
+        g_CANx_RecBuffer.Intranet_RecBuf[g_CANx_RecBuffer.Intranet_RecBuff_WPointer].frametype = R_Message.frametype;
+        g_CANx_RecBuffer.Intranet_RecBuf[g_CANx_RecBuffer.Intranet_RecBuff_WPointer].frame_id  = R_Message.frame_id;
+        
+        if ((R_Message.frametype == DataFrameWithStandardId)
+         || (R_Message.frametype == DataFrameWithExtendedId)) 
+        {
+            g_CANx_RecBuffer.Intranet_RecBuf[g_CANx_RecBuffer.Intranet_RecBuff_WPointer].data_length = R_Message.data_length;
+            
+            for (j = 0;j < R_Message.data_length; j++) 
+            {
+                g_CANx_RecBuffer.Intranet_RecBuf[g_CANx_RecBuffer.Intranet_RecBuff_WPointer].data[j] = R_Message.data[j]; 
+            }
+        }
+
+        g_CANx_RecBuffer.Intranet_RecBuff_WPointer++;
+    }
+
+    /* 
+    MSCAN0 Receive Channel is 0x59,so XGIF_59 bit of XGIF register 
+    should be written 1 to clear XGATE channel interrupt flag.
+    */
+    XGIF2 = 0x0200;  /* Clear MSCAN0 receive interrupt flag in XGATE */
+}
+
+
+
+interrupt void MSCAN1Receive_Handler(void) 
+{
+    int16_t ret_val,j;
+ 
+    MSCAN_ModuleConfig CAN_Module;
+    MSCAN_MessageTypeDef R_Message; 
+    
+    CAN_Module.ch   = MSCAN_Channel1;
+    CAN_Module.pins = MSCAN1_PM2_PM3;
+    
+    ret_val = MSCAN_ReceiveFrame(&CAN_Module, &R_Message); 
+           
+    if (0 == ret_val)   /* Receive CAN frame successfully */
+    {    
+        if (g_CANx_RecBuffer.ECU_RecBuff_WPointer >= ECU_RECEIVEBUF_SIZE) 
+        {
+            g_CANx_RecBuffer.ECU_RecBuff_WPointer = 0;
+        }
+
+        g_CANx_RecBuffer.ECU_RecBuf[g_CANx_RecBuffer.ECU_RecBuff_WPointer].frametype = R_Message.frametype;
+        g_CANx_RecBuffer.ECU_RecBuf[g_CANx_RecBuffer.ECU_RecBuff_WPointer].frame_id  = R_Message.frame_id;
+        
+        if ((R_Message.frametype == DataFrameWithStandardId)
+         || (R_Message.frametype == DataFrameWithExtendedId)) 
+        {
+            g_CANx_RecBuffer.ECU_RecBuf[g_CANx_RecBuffer.ECU_RecBuff_WPointer].data_length = R_Message.data_length;
+            
+            for (j = 0;j < R_Message.data_length; j++) 
+            {
+                g_CANx_RecBuffer.ECU_RecBuf[g_CANx_RecBuffer.ECU_RecBuff_WPointer].data[j] = R_Message.data[j]; 
+            }
+        }
+
+        g_CANx_RecBuffer.ECU_RecBuff_WPointer++;
+    }
+
+    /* 
+    MSCAN1 Receive Channel is 0x55,so XGIF_55 bit of XGIF register 
+    should be written 1 to clear XGATE channel interrupt flag.
+    */
+    XGIF2 = 0x0020;  /* Clear MSCAN1 receive interrupt flag in XGATE */    
+}
+
+
+
+interrupt void MSCAN4Receive_Handler(void) 
+{
+    int16_t ret_val,j;
+ 
+    MSCAN_ModuleConfig CAN_Module;
+    MSCAN_MessageTypeDef R_Message; 
+    
+    CAN_Module.ch   = MSCAN_Channel4;
+    CAN_Module.pins = MSCAN4_PM4_PM5;
+    
+    ret_val = MSCAN_ReceiveFrame(&CAN_Module, &R_Message); 
+           
+    if (0 == ret_val)   /* Receive CAN frame successfully */
+    {    
+        if (g_CANx_RecBuffer.Charger_RecBuff_WPointer >= CHARGER_RECEIVEBUF_SIZE) 
+        {
+            g_CANx_RecBuffer.Charger_RecBuff_WPointer = 0;
+        }
+
+        g_CANx_RecBuffer.Charger_RecBuf[g_CANx_RecBuffer.Charger_RecBuff_WPointer].frametype = R_Message.frametype;
+        g_CANx_RecBuffer.Charger_RecBuf[g_CANx_RecBuffer.Charger_RecBuff_WPointer].frame_id  = R_Message.frame_id;
+        
+        if ((R_Message.frametype == DataFrameWithStandardId)
+         || (R_Message.frametype == DataFrameWithExtendedId)) 
+        {
+            g_CANx_RecBuffer.Charger_RecBuf[g_CANx_RecBuffer.Charger_RecBuff_WPointer].data_length = R_Message.data_length;
+            
+            for (j = 0;j < R_Message.data_length; j++) 
+            {
+                g_CANx_RecBuffer.Charger_RecBuf[g_CANx_RecBuffer.Charger_RecBuff_WPointer].data[j] = R_Message.data[j]; 
+            }
+        }
+
+        g_CANx_RecBuffer.Charger_RecBuff_WPointer++;
+    }
+
+    /* 
+    MSCAN4 Receive Channel is 0x49,so XGIF_49 bit of XGIF register 
+    should be written 1 to clear XGATE channel interrupt flag.
+    */
+    XGIF3 = 0x0200;  /* Clear MSCAN4 receive interrupt flag in XGATE */     
+}
+
+
+
+
+
+#pragma CONST_SEG XGATE_VECTORS  /* assign the vector table in separate segment for dedicated placement in linker parameter file */
+
+const XGATE_TableEntry XGATE_VectorTable[] = 
+{
+  // Channel # = Vector address / 2
+  /* channel 0..8 are not used, first used must match macro XGATE_VECTOR_OFFSET in xgate.h */
+  {ErrorHandler, 0x09},  // Channel 09 - Reserved
+  {ErrorHandler, 0x0A},  // Channel 0A - Reserved
+  {ErrorHandler, 0x0B},  // Channel 0B - Reserved
+  {ErrorHandler, 0x0C},  // Channel 0C - Reserved
+  {ErrorHandler, 0x0D},  // Channel 0D - Reserved
+  {ErrorHandler, 0x0E},  // Channel 0E - Reserved
+  {ErrorHandler, 0x0F},  // Channel 0F - Reserved
+  {ErrorHandler, 0x10},  // Channel 10 - Reserved
+  {ErrorHandler, 0x11},  // Channel 11 - Reserved
+  {ErrorHandler, 0x12},  // Channel 12 - Reserved
+  {ErrorHandler, 0x13},  // Channel 13 - Reserved
+  {ErrorHandler, 0x14},  // Channel 14 - Reserved
+  {ErrorHandler, 0x15},  // Channel 15 - Reserved
+  {ErrorHandler, 0x16},  // Channel 16 - Reserved
+  {ErrorHandler, 0x17},  // Channel 17 - Reserved
+  {ErrorHandler, 0x18},  // Channel 18 - Reserved
+  {ErrorHandler, 0x19},  // Channel 19 - Reserved
+  {ErrorHandler, 0x1A},  // Channel 1A - Reserved
+  {ErrorHandler, 0x1B},  // Channel 1B - Reserved
+  {ErrorHandler, 0x1C},  // Channel 1C - Reserved
+  {ErrorHandler, 0x1D},  // Channel 1D - Reserved
+  {ErrorHandler, 0x1E},  // Channel 1E - Reserved
+  {ErrorHandler, 0x1F},  // Channel 1F - Reserved
+  {ErrorHandler, 0x20},  // Channel 20 - Reserved
+  {ErrorHandler, 0x21},  // Channel 21 - Reserved
+  {ErrorHandler, 0x22},  // Channel 22 - Reserved
+  {ErrorHandler, 0x23},  // Channel 23 - Reserved
+  {ErrorHandler, 0x24},  // Channel 24 - Reserved
+  {ErrorHandler, 0x25},  // Channel 25 - Reserved
+  {ErrorHandler, 0x26},  // Channel 26 - Reserved
+  {ErrorHandler, 0x27},  // Channel 27 - Reserved
+  {ErrorHandler, 0x28},  // Channel 28 - Reserved
+  {ErrorHandler, 0x29},  // Channel 29 - Reserved
+  {ErrorHandler, 0x2A},  // Channel 2A - Reserved
+  {ErrorHandler, 0x2B},  // Channel 2B - Reserved
+  {ErrorHandler, 0x2C},  // Channel 2C - Reserved
+  {ErrorHandler, 0x2D},  // Channel 2D - Reserved
+  {ErrorHandler, 0x2E},  // Channel 2E - Reserved
+  {ErrorHandler, 0x2F},  // Channel 2F - Reserved
+  {ErrorHandler, 0x30},  // Channel 30 - XSRAM20K Access Violation
+  {ErrorHandler, 0x31},  // Channel 31 - XGATE Software Error Interrupt     
+  {ErrorHandler, 0x32},  // Channel 32 - XGATE Software Trigger 7           
+  {ErrorHandler, 0x33},  // Channel 33 - XGATE Software Trigger 6           
+  {ErrorHandler, 0x34},  // Channel 34 - XGATE Software Trigger 5           
+  {ErrorHandler, 0x35},  // Channel 35 - XGATE Software Trigger 4           
+  {ErrorHandler, 0x36},  // Channel 36 - XGATE Software Trigger 3           
+  {ErrorHandler, 0x37},  // Channel 37 - XGATE Software Trigger 2           
+  {ErrorHandler, 0x38},  // Channel 38 - XGATE Software Trigger 1           
+  {(XGATE_Function)SoftwareTrigger0_Handler, (int)&MyData},  // Channel 39 - XGATE Software Trigger 0       
+  {ErrorHandler, 0x3A},  // Channel 3A - Periodic Interrupt Timer           
+  {ErrorHandler, 0x3B},  // Channel 3B - Periodic Interrupt Timer           
+  {ErrorHandler, 0x3C},  // Channel 3C - Periodic Interrupt Timer           
+  {ErrorHandler, 0x3D},  // Channel 3D - Periodic Interrupt Timer           
+  {ErrorHandler, 0x3E},  // Channel 3E - Reserved                           
+  {ErrorHandler, 0x3F},  // Channel 3F - Autonomous Periodical interrupt API
+  {ErrorHandler, 0x40},  // Channel 40 - Low Voltage interrupt LVI
+  {ErrorHandler, 0x41},  // Channel 41 - IIC1 Bus                 
+  {ErrorHandler, 0x42},  // Channel 42 - SCI5                     
+  {ErrorHandler, 0x43},  // Channel 43 - SCI4                     
+  {ErrorHandler, 0x44},  // Channel 44 - SCI3                     
+  {ErrorHandler, 0x45},  // Channel 45 - SCI2                     
+  {ErrorHandler, 0x46},  // Channel 46 - PWM Emergency Shutdown   
+  {ErrorHandler, 0x47},  // Channel 47 - Port P Interrupt         
+  {ErrorHandler, 0x48},  // Channel 48 - CAN4 transmit            
+  {(XGATE_Function)MSCAN4Receive_Handler, 0x49},  // Channel 49 - CAN4 receive             
+  {ErrorHandler, 0x4A},  // Channel 4A - CAN4 errors              
+  {ErrorHandler, 0x4B},  // Channel 4B - CAN4 wake-up             
+  {ErrorHandler, 0x4C},  // Channel 4C - CAN3 transmit            
+  {ErrorHandler, 0x4D},  // Channel 4D - CAN3 receive             
+  {ErrorHandler, 0x4E},  // Channel 4E - CAN3 errors              
+  {ErrorHandler, 0x4F},  // Channel 4F - CAN3 wake-up             
+  {ErrorHandler, 0x50},  // Channel 50 - CAN2 transmit
+  {ErrorHandler, 0x51},  // Channel 51 - CAN2 receive 
+  {ErrorHandler, 0x52},  // Channel 52 - CAN2 errors  
+  {ErrorHandler, 0x53},  // Channel 53 - CAN2 wake-up 
+  {ErrorHandler, 0x54},  // Channel 54 - CAN1 transmit
+  {(XGATE_Function)MSCAN1Receive_Handler, 0x55},  // Channel 55 - CAN1 receive 
+  {ErrorHandler, 0x56},  // Channel 56 - CAN1 errors  
+  {ErrorHandler, 0x57},  // Channel 57 - CAN1 wake-up 
+  {ErrorHandler, 0x58},  // Channel 58 - CAN0 transmit
+  {(XGATE_Function)MSCAN0Receive_Handler, 0x59},  // Channel 59 - CAN0 receive 
+  {ErrorHandler, 0x5A},  // Channel 5A - CAN0 errors  
+  {ErrorHandler, 0x5B},  // Channel 5B - CAN0 wake-up 
+  {ErrorHandler, 0x5C},  // Channel 5C - FLASH 
+  {ErrorHandler, 0x5D},  // Channel 5D - EEPROM
+  {ErrorHandler, 0x5E},  // Channel 5E - SPI2  
+  {ErrorHandler, 0x5F},  // Channel 5F - SPI1
+  {ErrorHandler, 0x60},  // Channel 60 - IIC0 Bus                         
+  {ErrorHandler, 0x61},  // Channel 61 - Reserved                         
+  {ErrorHandler, 0x62},  // Channel 62 - CRG Self Clock Mode              
+  {ErrorHandler, 0x63},  // Channel 63 - CRG PLL lock                     
+  {ErrorHandler, 0x64},  // Channel 64 - Pulse Accumulator B Overflow     
+  {ErrorHandler, 0x65},  // Channel 65 - Modulus Down Counter underflow   
+  {ErrorHandler, 0x66},  // Channel 66 - Port H                           
+  {ErrorHandler, 0x67},  // Channel 67 - Port J                           
+  {ErrorHandler, 0x68},  // Channel 68 - ATD1                             
+  {ErrorHandler, 0x69},  // Channel 69 - ATD0                             
+  {ErrorHandler, 0x6A},  // Channel 6A - SCI1                             
+  {ErrorHandler, 0x6B},  // Channel 6B - SCI0                             
+  {ErrorHandler, 0x6C},  // Channel 6C - SPI0                             
+  {ErrorHandler, 0x6D},  // Channel 6D - Pulse accumulator input edge     
+  {ErrorHandler, 0x6E},  // Channel 6E - Pulse accumulator A overflow     
+  {ErrorHandler, 0x6F},  // Channel 6F - Enhanced Capture Timer overflow  
+  {ErrorHandler, 0x70},  // Channel 70 - Enhanced Capture Timer channel 7                                 
+  {ErrorHandler, 0x71},  // Channel 71 - Enhanced Capture Timer channel 6 
+  {ErrorHandler, 0x72},  // Channel 72 - Enhanced Capture Timer channel 5 
+  {ErrorHandler, 0x73},  // Channel 73 - Enhanced Capture Timer channel 4 
+  {ErrorHandler, 0x74},  // Channel 74 - Enhanced Capture Timer channel 3 
+  {ErrorHandler, 0x75},  // Channel 75 - Enhanced Capture Timer channel 2 
+  {ErrorHandler, 0x76},  // Channel 76 - Enhanced Capture Timer channel 1 
+  {ErrorHandler, 0x77},  // Channel 77 - Enhanced Capture Timer channel 0 
+  {ErrorHandler, 0x78},  // Channel 78 - Real Time Interrupt 
+  {ErrorHandler, 0x79},  // Channel 79 - IRQ
+};

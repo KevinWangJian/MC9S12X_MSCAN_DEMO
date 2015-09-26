@@ -1,0 +1,32 @@
+OPEN source 0 0 50 33
+Source:1 < attributes SHOW_CORE 0,MARKS on
+OPEN source 50 0 50 33
+Source:2 < attributes SHOW_CORE 1,MARKS on
+OPEN assembly 0 33 50 14
+Assembly:1 < attributes SHOW_CORE 0,ADR on,CODE off,ABSADR on,SYMB off,TOPPC 0xC000
+OPEN assembly 50 33 50 14
+Assembly:2 < attributes SHOW_CORE 1,ADR off,CODE off,ABSADR on,SYMB off,TOPPC 0x0
+OPEN register 0 47 35 19
+Register:1 < attributes SHOW_CORE 0,FORMAT AUTO,COMPLEMENT None
+OPEN procedure 35 47 15 19
+Procedure:1 < attributes SHOW_CORE 0,VALUES on,TYPES off
+OPEN register 50 47 35 19
+Register:2 < attributes SHOW_CORE 1,FORMAT AUTO,COMPLEMENT None
+OPEN procedure 85 47 15 19
+Procedure:2 < attributes SHOW_CORE 1,VALUES on,TYPES off
+OPEN data 0 66 25 19
+Data:1 < attributes SHOW_CORE 0,SCOPE global,COMPLEMENT None,FORMAT Symb,MODE automatic,UPDATERATE 10,NAMEWIDTH 16
+OPEN data 25 66 25 19
+Data:2 < attributes SHOW_CORE 0,SCOPE local,COMPLEMENT None,FORMAT Symb,MODE automatic,UPDATERATE 10,NAMEWIDTH 16
+OPEN data 50 66 25 19
+Data:3 < attributes SHOW_CORE 1,SCOPE global,COMPLEMENT None,FORMAT Symb,MODE automatic,UPDATERATE 10,NAMEWIDTH 16
+OPEN data 75 66 25 19
+Data:4 < attributes SHOW_CORE 1,SCOPE local,COMPLEMENT None,FORMAT Symb,MODE automatic,UPDATERATE 10,NAMEWIDTH 16
+OPEN memory 0 85 54 15
+Memory < attributes FORMAT hex,COMPLEMENT None,WORD 1,ASC on,ADR on,ADDRESS 0x80
+OPEN command 54 85 46 15
+Command < attributes CACHESIZE 1000
+bckcolor 50331647
+font 'Courier New' 9 BLACK
+AUTOSIZE on
+ACTIVATE Assembly:2 Procedure:2 Source:1 Assembly:1 Procedure:1 Source:2 Register:2 Command Memory Register:1 Data:2 Data:3 Data:4 Data:1 
