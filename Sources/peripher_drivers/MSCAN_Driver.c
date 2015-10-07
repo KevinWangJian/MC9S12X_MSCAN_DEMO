@@ -15,6 +15,7 @@
   *              Also,move the CAN receive frame function to the XGATE.     (V1.0.1)
   *           3. Add a functon which is Checking the specified CAN module whether 
   *              have enough hard transmission buffer to send CAN messages. (V1.0.2)
+  *           4. Change CAN message structure definetion.                   (V1.0.3)
   * @version: V1.0.2
   * @date:    26-Sep-2015
 
