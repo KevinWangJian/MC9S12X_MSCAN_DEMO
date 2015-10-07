@@ -1,5 +1,5 @@
 
-PROGRAM "D:\My Work\gold_project\Sorftware\EVBCM_V3.8\MSCAN Demo_MC9S12X_Rev1.0.1\bin\Project.abs"
+PROGRAM "D:\My Work\gold_project\Sorftware\EVBCM_V3.8\MSCAN Demo_MC9S12X_Rev1.0.2\bin\Project.abs"
 
 *********************************************************************************************
 TARGET SECTION
@@ -32,7 +32,7 @@ _startupData is allocated at 0xC00F and uses 6 Bytes
 extern struct _tagStartup {
   unsigned nofZeroOut     2
   _Range   pZeroOut       0x2100     10
-                          0xFD1000     3852
+                          0xFD1000     2572
   _Copy    *toCopyDownBeg 0xC0A2
 } _startupData;
 
@@ -44,12 +44,12 @@ Section Name                    Size  Type     From       To       Segment
 .startData                        41     R     0xC00F     0xC037   ROM_C000
 NON_BANKED                       106     R     0xC038     0xC0A1   ROM_C000
 .copy                              2     R     0xC0A2     0xC0A3   ROM_C000
-.text                           9542     R   0xFE8000   0xFEA545   PAGE_FE
+.text                           9434     R   0xFE8000   0xFEA4D9   PAGE_FE
 XGATE_VECTORS                    452     R   0xE08800   0xE089C3   PAGE_E0
-XGATE_CODE                      2002     R   0xE089C4   0xE09195   PAGE_E0
+XGATE_CODE                      1924     R   0xE089C4   0xE09147   PAGE_E0
 .stack                           256   R/W     0x2000     0x20FF   RAM
 SHARED_DATA                        2   R/W     0x2100     0x2101   RAM
-PAGED_RAM                       3852   R/W   0xFD1000   0xFD1F0B   RAM_FD
+PAGED_RAM                       2572   R/W   0xFD1000   0xFD1A0B   RAM_FD
 XGATE_STK_L                        2   N/I   0xF8107E   0xF8107F   RAM_XGATE_STK_L
 XGATE_STK_H                        2   N/I   0xF810FE   0xF810FF   RAM_XGATE_STK_H
 .abs_section_8                     1   N/I        0x8        0x8   .absSeg0
@@ -685,8 +685,8 @@ XGATE_STK_H                        2   N/I   0xF810FE   0xF810FF   RAM_XGATE_STK
 .vectSeg629_vect                   2     R     0xFFFE     0xFFFF   .vectSeg629
 
 Summary of section sizes per section type:
-READ_ONLY (R):        2F84 (dec:    12164)
-READ_WRITE (R/W):     1016 (dec:     4118)
+READ_ONLY (R):        2ECA (dec:    11978)
+READ_WRITE (R/W):      B16 (dec:     2838)
 NO_INIT (N/I):         303 (dec:      771)
 
 *********************************************************************************************
@@ -1333,15 +1333,15 @@ MODULE:                 -- MC9S12XEQ512.c.o --
 MODULE:                 -- main.c.o --
 - PROCEDURES:
      SetupXGATE                              FE8000      4D      77       2   .text       
-     main                                    FE804D     179     377       2   .text       
+     main                                    FE804D     17D     381       2   .text       
 - VARIABLES:
-     g_CANx_RecBuffer                        FD1000     876    2166     122   PAGED_RAM   
+     g_CANx_RecBuffer                        FD1000     5A6    1446     122   PAGED_RAM   
      shared_counter                            2100       2       2       2   SHARED_DATA 
      XGATE_STACK_L                           F8107E       2       2       1   XGATE_STK_L 
      XGATE_STACK_H                           F810FE       2       2       1   XGATE_STK_H 
 MODULE:                 -- Start12.c.o --
 - PROCEDURES:
-     Init                                    FE81C6      51      81       2   .text       
+     Init                                    FE81CA      51      81       2   .text       
      _Startup                                  C000       F      15       0   .init       
 - VARIABLES:
      _startupData                              C00F       6       6       3   .startData  
@@ -1362,9 +1362,9 @@ MODULE:                 -- xgate.cxgate.o --
      __X_SoftwareTrigger0_Handler            E08A1C      18      24       1   XGATE_CODE  
      __X_ErrorHandler                        E08A34       4       4     109   XGATE_CODE  
      __X_MSCAN_ReceiveFrame                  E08A38     57E    1406      16   XGATE_CODE  
-     __X_MSCAN0Receive_Handler               E08FB6      9E     158       1   XGATE_CODE  
-     __X_MSCAN1Receive_Handler               E09054      A0     160       1   XGATE_CODE  
-     __X_MSCAN4Receive_Handler               E090F4      A2     162       1   XGATE_CODE  
+     __X_MSCAN0Receive_Handler               E08FB6      84     132       1   XGATE_CODE  
+     __X_MSCAN1Receive_Handler               E0903A      86     134       1   XGATE_CODE  
+     __X_MSCAN4Receive_Handler               E090C0      88     136       1   XGATE_CODE  
 - VARIABLES:
      MyData                                    2102       2       2       1   .bss        
      XGATE_VectorTable                       E08800     1C4     452       1   XGATE_VECTORS
@@ -1376,47 +1376,47 @@ MODULE:                 -- MC9S12X_ISR.c.o --
      _Vector_7                                 FFF0       2       2       0   .abs_section_fff0
 MODULE:                 -- GPIO_Driver.c.o --
 - PROCEDURES:
-     GPIO_Init                               FE8217     1A1     417      23   .text       
-     GPIO_ToggleBit                          FE83B8      F3     243       5   .text       
+     GPIO_Init                               FE821B     1A1     417      23   .text       
+     GPIO_ToggleBit                          FE83BC      F3     243       5   .text       
 - VARIABLES:
 MODULE:                 -- MSCAN_Driver.c.o --
 - PROCEDURES:
-     MSCAN_ConfigIDFilter                    FE84AB     98A    2442      70   .text       
-     MSCAN_Init                              FE8E35     721    1825      17   .text       
-     MSCAN_SendFrame                         FE9556     64C    1612      15   .text       
-     MSCAN_HardTxBufferCheck                 FE9BA2      30      48       2   .text       
+     MSCAN_ConfigIDFilter                    FE84AF     98A    2442      70   .text       
+     MSCAN_Init                              FE8E39     721    1825      17   .text       
+     MSCAN_SendFrame                         FE955A     60F    1551      15   .text       
+     MSCAN_HardTxBufferCheck                 FE9B69      30      48       2   .text       
 - VARIABLES:
 MODULE:                 -- System_Driver.c.o --
 - PROCEDURES:
-     SystemClock_Init                        FE9BD2      52      82       2   .text       
-     SystemRTI_Init                          FE9C24      3B      59       2   .text       
-     TimeDelay_Decrement                     FE9C5F      21      33       2   .text       
-     Delay10ms                               FE9C80      14      20       2   .text       
+     SystemClock_Init                        FE9B99      52      82       2   .text       
+     SystemRTI_Init                          FE9BEB      3B      59       2   .text       
+     TimeDelay_Decrement                     FE9C26      21      33       2   .text       
+     Delay10ms                               FE9C47      14      20       2   .text       
 - VARIABLES:
      g_TimingDelay                             2106       4       4      10   .bss        
 MODULE:                 -- CAN_Message.c.o --
 - PROCEDURES:
-     Check_CANReceiveBuffer                  FE9C94     345     837       7   .text       
-     Fill_CANSendBuffer                      FE9FD9     22E     558       5   .text       
-     Check_CANSendBuffer                     FEA207     33F     831       7   .text       
+     Check_CANReceiveBuffer                  FE9C5B     333     819       7   .text       
+     Fill_CANSendBuffer                      FE9F8E     21F     543       5   .text       
+     Check_CANSendBuffer                     FEA1AD     32D     813       7   .text       
 - VARIABLES:
-     g_CANx_SendBuffer                       FD1876     696    1686     142   PAGED_RAM   
+     g_CANx_SendBuffer                       FD15A6     466    1126     142   PAGED_RAM   
 
 *********************************************************************************************
 MODULE STATISTIC
   Name                                      Data   Code  Const
 ---------------------------------------------------------------------------------------------
   MC9S12XEQ512.c.o                           767      0      0
-  main.c.o                                  2172    454      0
+  main.c.o                                  1452    458      0
   Start12.c.o                                  0     96      0
   rtshc12.c.o (ansixbf.lib)                    0     31      0
   rtsxgate.cxgate.o (ansi_xgi.lib)             0     88      0
-  xgate.cxgate.o                               2   1914    452
+  xgate.cxgate.o                               2   1836    452
   MC9S12X_ISR.c.o                              1     75      2
   GPIO_Driver.c.o                              0    660      0
-  MSCAN_Driver.c.o                             0   5927      0
+  MSCAN_Driver.c.o                             0   5866      0
   System_Driver.c.o                            4    194      0
-  CAN_Message.c.o                           1686   2226      0
+  CAN_Message.c.o                           1126   2175      0
   other                                      256     43      2
 
 *********************************************************************************************
@@ -3353,29 +3353,29 @@ OBJECT LIST SORTED BY ADDRESS
      __X_SoftwareTrigger0_Handler            E08A1C      18      24       1   XGATE_CODE  
      __X_ErrorHandler                        E08A34       4       4     109   XGATE_CODE  
      __X_MSCAN_ReceiveFrame                  E08A38     57E    1406      16   XGATE_CODE  
-     __X_MSCAN0Receive_Handler               E08FB6      9E     158       1   XGATE_CODE  
-     __X_MSCAN1Receive_Handler               E09054      A0     160       1   XGATE_CODE  
-     __X_MSCAN4Receive_Handler               E090F4      A2     162       1   XGATE_CODE  
+     __X_MSCAN0Receive_Handler               E08FB6      84     132       1   XGATE_CODE  
+     __X_MSCAN1Receive_Handler               E0903A      86     134       1   XGATE_CODE  
+     __X_MSCAN4Receive_Handler               E090C0      88     136       1   XGATE_CODE  
      XGATE_STACK_L                           F8107E       2       2       1   XGATE_STK_L 
      XGATE_STACK_H                           F810FE       2       2       1   XGATE_STK_H 
-     g_CANx_RecBuffer                        FD1000     876    2166     122   PAGED_RAM   
-     g_CANx_SendBuffer                       FD1876     696    1686     142   PAGED_RAM   
+     g_CANx_RecBuffer                        FD1000     5A6    1446     122   PAGED_RAM   
+     g_CANx_SendBuffer                       FD15A6     466    1126     142   PAGED_RAM   
      SetupXGATE                              FE8000      4D      77       2   .text       
-     main                                    FE804D     179     377       2   .text       
-     Init                                    FE81C6      51      81       2   .text       
-     GPIO_Init                               FE8217     1A1     417      23   .text       
-     GPIO_ToggleBit                          FE83B8      F3     243       5   .text       
-     MSCAN_ConfigIDFilter                    FE84AB     98A    2442      70   .text       
-     MSCAN_Init                              FE8E35     721    1825      17   .text       
-     MSCAN_SendFrame                         FE9556     64C    1612      15   .text       
-     MSCAN_HardTxBufferCheck                 FE9BA2      30      48       2   .text       
-     SystemClock_Init                        FE9BD2      52      82       2   .text       
-     SystemRTI_Init                          FE9C24      3B      59       2   .text       
-     TimeDelay_Decrement                     FE9C5F      21      33       2   .text       
-     Delay10ms                               FE9C80      14      20       2   .text       
-     Check_CANReceiveBuffer                  FE9C94     345     837       7   .text       
-     Fill_CANSendBuffer                      FE9FD9     22E     558       5   .text       
-     Check_CANSendBuffer                     FEA207     33F     831       7   .text       
+     main                                    FE804D     17D     381       2   .text       
+     Init                                    FE81CA      51      81       2   .text       
+     GPIO_Init                               FE821B     1A1     417      23   .text       
+     GPIO_ToggleBit                          FE83BC      F3     243       5   .text       
+     MSCAN_ConfigIDFilter                    FE84AF     98A    2442      70   .text       
+     MSCAN_Init                              FE8E39     721    1825      17   .text       
+     MSCAN_SendFrame                         FE955A     60F    1551      15   .text       
+     MSCAN_HardTxBufferCheck                 FE9B69      30      48       2   .text       
+     SystemClock_Init                        FE9B99      52      82       2   .text       
+     SystemRTI_Init                          FE9BEB      3B      59       2   .text       
+     TimeDelay_Decrement                     FE9C26      21      33       2   .text       
+     Delay10ms                               FE9C47      14      20       2   .text       
+     Check_CANReceiveBuffer                  FE9C5B     333     819       7   .text       
+     Fill_CANSendBuffer                      FE9F8E     21F     543       5   .text       
+     Check_CANSendBuffer                     FEA1AD     32D     813       7   .text       
 
 *********************************************************************************************
 UNUSED-OBJECTS SECTION
@@ -3570,5 +3570,5 @@ STATISTIC SECTION
 ExeFile:
 --------
 Number of blocks to be downloaded: 8
-Total size of all blocks to be downloaded: 12164
+Total size of all blocks to be downloaded: 11978
 

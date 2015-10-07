@@ -140,7 +140,7 @@ typedef enum
 typedef struct 
 {
     MSCAN_FrameAndIDTypeDef frametype;			/* CAN frame type and ID format */
-    uint16_t  data[8];							/* 8 bytes data */
+    uint8_t  data[8];							/* 8 bytes data */
     uint16_t  data_length;						/* CAN frame data length */
     uint32_t frame_id;							/* CAN frame ID value */
 }MSCAN_MessageTypeDef;
