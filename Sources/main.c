@@ -75,7 +75,7 @@ word XGATE_STACK_H[1];
 
 #define   MSCAN1RECEIVE_VEC     0xAA      /* MSCAN1 receive interrupt vector address.(0x55 * 2 = 0xAA) */
 
-#define   MSCAN4RECEIVE_VEC     0x9A      /* MSCAN4 receive interrupt vector address.(0x4D * 2 = 0x9A) */
+#define   MSCAN4RECEIVE_VEC     0x92      /* MSCAN4 receive interrupt vector address.(0x49 * 2 = 0x92) */
 
 
 
@@ -150,9 +150,17 @@ void main(void)
     
     for (k = 0; k < INTRANET_RECEIVEBUF_SIZE; k++) 
     {
-        g_CANx_RecBuffer.Intranet_RecBuf[k].frametype = 0;
-        g_CANx_RecBuffer.ECU_RecBuf[k].frametype      = 0;
-        g_CANx_RecBuffer.Charger_RecBuf[k].frametype  = 0;    
+        g_CANx_RecBuffer.Intranet_RecBuf[k].frametype = (MSCAN_FrameAndIDTypeDef)0;  
+    }
+    
+    for (k = 0; k < ECU_RECEIVEBUF_SIZE; k++) 
+    {
+        g_CANx_RecBuffer.ECU_RecBuf[k].frametype      = (MSCAN_FrameAndIDTypeDef)0;
+    }
+    
+    for (k = 0; k < CHARGER_RECEIVEBUF_SIZE; k++) 
+    {   
+        g_CANx_RecBuffer.Charger_RecBuf[k].frametype  = (MSCAN_FrameAndIDTypeDef)0;
     }
     
     g_CANx_SendBuffer.Intranet_SendBuff_WPointer = 0;
@@ -164,14 +172,20 @@ void main(void)
     
     for (k = 0; k < INTRANET_SENDBUF_SIZE; k++) 
     {
-        g_CANx_SendBuffer.Intranet_SendBuff[k].frametype = 0;
-        g_CANx_SendBuffer.ECU_SendBuff[k].frametype      = 0;
-        g_CANx_SendBuffer.Charger_SendBuff[k].frametype  = 0;  
+        g_CANx_SendBuffer.Intranet_SendBuff[k].frametype = (MSCAN_FrameAndIDTypeDef)0; 
     }
     
-    /* Select CAN module number and signal pins remap */
-    CAN_Module.ch = MSCAN_Channel0;
-    CAN_Module.pins = MSCAN0_PM0_PM1;
+    for (k = 0; k < ECU_RECEIVEBUF_SIZE; k++) 
+    {
+        g_CANx_SendBuffer.ECU_SendBuff[k].frametype      = (MSCAN_FrameAndIDTypeDef)0;
+    }
+    
+    for (k = 0; k < CHARGER_RECEIVEBUF_SIZE; k++) 
+    {   
+        g_CANx_SendBuffer.Charger_SendBuff[k].frametype  = (MSCAN_FrameAndIDTypeDef)0;
+    }
+    
+
     
     /* Configure CAN module trnasfer property parameters */
     CAN_Property.baudrate                    = MSCAN_Baudrate_250K;
@@ -216,6 +230,26 @@ void main(void)
     /* Initialize sysytem clock and Bus clock frequency */
     ret_val = SystemClock_Init(BusClock_32MHz);
     
+    /* Select CAN module number and signal pins remap */
+    CAN_Module.ch = MSCAN_Channel0;
+    CAN_Module.pins = MSCAN0_PM0_PM1;
+    
+    /* Initialize MSCAN module by the specified property */
+    ret_val = MSCAN_Init(&CAN_Module, &CAN_Property, &CAN_Filter);
+    
+    
+    /* Select CAN module number and signal pins remap */
+    CAN_Module.ch = MSCAN_Channel1;
+    CAN_Module.pins = MSCAN1_PM2_PM3;
+    
+    /* Initialize MSCAN module by the specified property */
+    ret_val = MSCAN_Init(&CAN_Module, &CAN_Property, &CAN_Filter);
+    
+    
+    /* Select CAN module number and signal pins remap */
+    CAN_Module.ch = MSCAN_Channel4;
+    CAN_Module.pins = MSCAN4_PM4_PM5;
+    
     /* Initialize MSCAN module by the specified property */
     ret_val = MSCAN_Init(&CAN_Module, &CAN_Property, &CAN_Filter);
     
@@ -230,9 +264,11 @@ void main(void)
     {  
         Delay10ms(25);
         
-        ret_val = Fill_CANSendBuffer(MSCAN_Channel0, &Send_Buf);
+       // ret_val = Fill_CANSendBuffer(MSCAN_Channel0, &Send_Buf);
+        
+        ret_val = Fill_CANSendBuffer(MSCAN_Channel4, &Send_Buf);
 
-        if (Check_CANReceiveBuffer(MSCAN_Channel0, &T_ReceiveBuf) == 0) 
+        if (Check_CANReceiveBuffer(MSCAN_Channel4, &T_ReceiveBuf) == 0) 
         {
             if (T_ReceiveBuf.frame_id == 0x18901212u) 
             {

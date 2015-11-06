@@ -68,14 +68,14 @@ int16_t Check_CANReceiveBuffer(MSCAN_ChannelTypeDef CANx, MSCAN_MessageTypeDef* 
     
         /* If the frame type value of intranet CAN received message is zero,that means the current 
            received buffer is empty. */
-        if (g_CANx_RecBuffer.Intranet_RecBuf[g_CANx_RecBuffer.Intranet_RecBuff_RPointer].frametype == 0)   
+        if (g_CANx_RecBuffer.Intranet_RecBuf[g_CANx_RecBuffer.Intranet_RecBuff_RPointer].frametype == (MSCAN_FrameAndIDTypeDef)0)   
         {        
             return -1;        
         } 
         else /* If the frame type value is not zero,that means there is a valid CAN message in the current received buffer. */
         {
             CAN_RMessage->frametype   = g_CANx_RecBuffer.Intranet_RecBuf[g_CANx_RecBuffer.Intranet_RecBuff_RPointer].frametype;
-            g_CANx_RecBuffer.Intranet_RecBuf[g_CANx_RecBuffer.Intranet_RecBuff_RPointer].frametype   = 0;
+            g_CANx_RecBuffer.Intranet_RecBuf[g_CANx_RecBuffer.Intranet_RecBuff_RPointer].frametype   = (MSCAN_FrameAndIDTypeDef)0;
             
             CAN_RMessage->frame_id    = g_CANx_RecBuffer.Intranet_RecBuf[g_CANx_RecBuffer.Intranet_RecBuff_RPointer].frame_id;
             g_CANx_RecBuffer.Intranet_RecBuf[g_CANx_RecBuffer.Intranet_RecBuff_RPointer].frame_id    = 0;
@@ -100,21 +100,21 @@ int16_t Check_CANReceiveBuffer(MSCAN_ChannelTypeDef CANx, MSCAN_MessageTypeDef* 
     } 
     else if (MSCAN_Channel1 == CANx) 
     {
-        if (g_CANx_RecBuffer.ECU_RecBuff_RPointer >= INTRANET_RECEIVEBUF_SIZE) 
+        if (g_CANx_RecBuffer.ECU_RecBuff_RPointer >= ECU_RECEIVEBUF_SIZE) 
         {
             g_CANx_RecBuffer.ECU_RecBuff_RPointer = 0;    
         }
     
         /* If the frame type value of intranet CAN received message is zero,that means the current 
            received buffer is empty. */
-        if (g_CANx_RecBuffer.ECU_RecBuf[g_CANx_RecBuffer.ECU_RecBuff_RPointer].frametype == 0)   
+        if (g_CANx_RecBuffer.ECU_RecBuf[g_CANx_RecBuffer.ECU_RecBuff_RPointer].frametype == (MSCAN_FrameAndIDTypeDef)0)   
         {        
             return -1;        
         } 
         else /* If the frame type value is not zero,that means there is a valid CAN message in the current received buffer. */
         {
             CAN_RMessage->frametype   = g_CANx_RecBuffer.ECU_RecBuf[g_CANx_RecBuffer.ECU_RecBuff_RPointer].frametype;
-            g_CANx_RecBuffer.ECU_RecBuf[g_CANx_RecBuffer.ECU_RecBuff_RPointer].frametype   = 0;
+            g_CANx_RecBuffer.ECU_RecBuf[g_CANx_RecBuffer.ECU_RecBuff_RPointer].frametype   = (MSCAN_FrameAndIDTypeDef)0;
             
             CAN_RMessage->frame_id    = g_CANx_RecBuffer.ECU_RecBuf[g_CANx_RecBuffer.ECU_RecBuff_RPointer].frame_id;
             g_CANx_RecBuffer.ECU_RecBuf[g_CANx_RecBuffer.ECU_RecBuff_RPointer].frame_id    = 0;
@@ -139,21 +139,21 @@ int16_t Check_CANReceiveBuffer(MSCAN_ChannelTypeDef CANx, MSCAN_MessageTypeDef* 
     } 
     else 
     {
-        if (g_CANx_RecBuffer.Charger_RecBuff_RPointer >= INTRANET_RECEIVEBUF_SIZE) 
+        if (g_CANx_RecBuffer.Charger_RecBuff_RPointer >= CHARGER_RECEIVEBUF_SIZE) 
         {
             g_CANx_RecBuffer.Charger_RecBuff_RPointer = 0;    
         }
     
         /* If the frame type value of intranet CAN received message is zero,that means the current 
            received buffer is empty. */
-        if (g_CANx_RecBuffer.Charger_RecBuf[g_CANx_RecBuffer.Charger_RecBuff_RPointer].frametype == 0)   
+        if (g_CANx_RecBuffer.Charger_RecBuf[g_CANx_RecBuffer.Charger_RecBuff_RPointer].frametype == (MSCAN_FrameAndIDTypeDef)0)   
         {        
             return -1;        
         } 
         else /* If the frame type value is not zero,that means there is a valid CAN message in the current received buffer. */
         {
             CAN_RMessage->frametype   = g_CANx_RecBuffer.Charger_RecBuf[g_CANx_RecBuffer.Charger_RecBuff_RPointer].frametype;
-            g_CANx_RecBuffer.Charger_RecBuf[g_CANx_RecBuffer.Charger_RecBuff_RPointer].frametype   = 0;
+            g_CANx_RecBuffer.Charger_RecBuf[g_CANx_RecBuffer.Charger_RecBuff_RPointer].frametype   = (MSCAN_FrameAndIDTypeDef)0;
             
             CAN_RMessage->frame_id    = g_CANx_RecBuffer.Charger_RecBuf[g_CANx_RecBuffer.Charger_RecBuff_RPointer].frame_id;
             g_CANx_RecBuffer.Charger_RecBuf[g_CANx_RecBuffer.Charger_RecBuff_RPointer].frame_id    = 0;
@@ -206,13 +206,12 @@ int16_t Fill_CANSendBuffer(MSCAN_ChannelTypeDef CANx, MSCAN_MessageTypeDef* CAN_
         
         /* Get the frame type value and judge it.If the value is not zero,that means the 
            pointed buffer is full,and user can not fill the CAN message to it. */    
-        if (g_CANx_SendBuffer.Intranet_SendBuff[g_CANx_SendBuffer.Intranet_SendBuff_WPointer].frametype != 0) 
+        if (g_CANx_SendBuffer.Intranet_SendBuff[g_CANx_SendBuffer.Intranet_SendBuff_WPointer].frametype != (MSCAN_FrameAndIDTypeDef)0) 
         {
             return -1;    
         } 
         else /* If the frame type value is zero,that means the pointed buffer is empty,and user can fill the CAN message to it. */
         {   
-            g_CANx_SendBuffer.Intranet_SendBuff[g_CANx_SendBuffer.Intranet_SendBuff_WPointer].frametype = CAN_WMessage->frametype;
             g_CANx_SendBuffer.Intranet_SendBuff[g_CANx_SendBuffer.Intranet_SendBuff_WPointer].frame_id  = CAN_WMessage->frame_id;
 
             if ((CAN_WMessage->frametype == DataFrameWithStandardId)
@@ -225,6 +224,8 @@ int16_t Fill_CANSendBuffer(MSCAN_ChannelTypeDef CANx, MSCAN_MessageTypeDef* CAN_
                     g_CANx_SendBuffer.Intranet_SendBuff[g_CANx_SendBuffer.Intranet_SendBuff_WPointer].data[i] = CAN_WMessage->data[i];
                 }
             }
+            
+            g_CANx_SendBuffer.Intranet_SendBuff[g_CANx_SendBuffer.Intranet_SendBuff_WPointer].frametype = CAN_WMessage->frametype;
             
             g_CANx_SendBuffer.Intranet_SendBuff_WPointer++;
 
@@ -241,13 +242,12 @@ int16_t Fill_CANSendBuffer(MSCAN_ChannelTypeDef CANx, MSCAN_MessageTypeDef* CAN_
         
         /* Get the frame type value and judge it.If the value is not zero,that means the 
            pointed buffer is full,and user can not fill the CAN message to it. */     
-        if (g_CANx_SendBuffer.ECU_SendBuff[g_CANx_SendBuffer.ECU_SendBuff_WPointer].frametype != 0) 
+        if (g_CANx_SendBuffer.ECU_SendBuff[g_CANx_SendBuffer.ECU_SendBuff_WPointer].frametype != (MSCAN_FrameAndIDTypeDef)0) 
         {
             return -1;    
         } 
         else  /* If the frame type value is zero,that means the pointed buffer is empty,and user can fill the CAN message to it. */
         {   
-            g_CANx_SendBuffer.ECU_SendBuff[g_CANx_SendBuffer.ECU_SendBuff_WPointer].frametype = CAN_WMessage->frametype;
             g_CANx_SendBuffer.ECU_SendBuff[g_CANx_SendBuffer.ECU_SendBuff_WPointer].frame_id  = CAN_WMessage->frame_id;
 
             if ((CAN_WMessage->frametype == DataFrameWithStandardId)
@@ -261,6 +261,8 @@ int16_t Fill_CANSendBuffer(MSCAN_ChannelTypeDef CANx, MSCAN_MessageTypeDef* CAN_
                 }
             }
             
+            g_CANx_SendBuffer.ECU_SendBuff[g_CANx_SendBuffer.ECU_SendBuff_WPointer].frametype = CAN_WMessage->frametype;
+            
             g_CANx_SendBuffer.ECU_SendBuff_WPointer++;
 
             return 0; 
@@ -273,13 +275,12 @@ int16_t Fill_CANSendBuffer(MSCAN_ChannelTypeDef CANx, MSCAN_MessageTypeDef* CAN_
             g_CANx_SendBuffer.Charger_SendBuff_WPointer = 0;
         }
             
-        if (g_CANx_SendBuffer.Charger_SendBuff[g_CANx_SendBuffer.Charger_SendBuff_WPointer].frametype != 0) 
+        if (g_CANx_SendBuffer.Charger_SendBuff[g_CANx_SendBuffer.Charger_SendBuff_WPointer].frametype != (MSCAN_FrameAndIDTypeDef)0) 
         {
             return -1;    
         } 
         else 
         {   
-            g_CANx_SendBuffer.Charger_SendBuff[g_CANx_SendBuffer.Charger_SendBuff_WPointer].frametype = CAN_WMessage->frametype;
             g_CANx_SendBuffer.Charger_SendBuff[g_CANx_SendBuffer.Charger_SendBuff_WPointer].frame_id  = CAN_WMessage->frame_id;
 
             if ((CAN_WMessage->frametype == DataFrameWithStandardId)
@@ -292,6 +293,8 @@ int16_t Fill_CANSendBuffer(MSCAN_ChannelTypeDef CANx, MSCAN_MessageTypeDef* CAN_
                     g_CANx_SendBuffer.Charger_SendBuff[g_CANx_SendBuffer.Charger_SendBuff_WPointer].data[i] = CAN_WMessage->data[i];
                 }
             }
+            
+            g_CANx_SendBuffer.Charger_SendBuff[g_CANx_SendBuffer.Charger_SendBuff_WPointer].frametype = CAN_WMessage->frametype;
             
             g_CANx_SendBuffer.Charger_SendBuff_WPointer++;
 
@@ -329,10 +332,10 @@ int16_t Check_CANSendBuffer(MSCAN_ChannelTypeDef CANx, MSCAN_MessageTypeDef* CAN
         
         /* Get the frame type value and judge it.If the value is not zero,that means the 
            read pointed buffer is full,and user can read the CAN messages from it. */ 
-        if (g_CANx_SendBuffer.Intranet_SendBuff[g_CANx_SendBuffer.Intranet_SendBuff_RPointer].frametype != 0) 
+        if (g_CANx_SendBuffer.Intranet_SendBuff[g_CANx_SendBuffer.Intranet_SendBuff_RPointer].frametype != (MSCAN_FrameAndIDTypeDef)0) 
         {
             CAN_RMessage->frametype = g_CANx_SendBuffer.Intranet_SendBuff[g_CANx_SendBuffer.Intranet_SendBuff_RPointer].frametype;
-            g_CANx_SendBuffer.Intranet_SendBuff[g_CANx_SendBuffer.Intranet_SendBuff_RPointer].frametype = 0;
+            g_CANx_SendBuffer.Intranet_SendBuff[g_CANx_SendBuffer.Intranet_SendBuff_RPointer].frametype = (MSCAN_FrameAndIDTypeDef)0;
             
             CAN_RMessage->frame_id  = g_CANx_SendBuffer.Intranet_SendBuff[g_CANx_SendBuffer.Intranet_SendBuff_RPointer].frame_id;
             g_CANx_SendBuffer.Intranet_SendBuff[g_CANx_SendBuffer.Intranet_SendBuff_RPointer].frame_id = 0;
@@ -366,10 +369,10 @@ int16_t Check_CANSendBuffer(MSCAN_ChannelTypeDef CANx, MSCAN_MessageTypeDef* CAN
             g_CANx_SendBuffer.ECU_SendBuff_RPointer = 0;
         }
         
-        if (g_CANx_SendBuffer.ECU_SendBuff[g_CANx_SendBuffer.ECU_SendBuff_RPointer].frametype != 0) 
+        if (g_CANx_SendBuffer.ECU_SendBuff[g_CANx_SendBuffer.ECU_SendBuff_RPointer].frametype != (MSCAN_FrameAndIDTypeDef)0) 
         {
             CAN_RMessage->frametype = g_CANx_SendBuffer.ECU_SendBuff[g_CANx_SendBuffer.ECU_SendBuff_RPointer].frametype;
-            g_CANx_SendBuffer.ECU_SendBuff[g_CANx_SendBuffer.ECU_SendBuff_RPointer].frametype = 0;
+            g_CANx_SendBuffer.ECU_SendBuff[g_CANx_SendBuffer.ECU_SendBuff_RPointer].frametype = (MSCAN_FrameAndIDTypeDef)0;
             
             CAN_RMessage->frame_id  = g_CANx_SendBuffer.ECU_SendBuff[g_CANx_SendBuffer.ECU_SendBuff_RPointer].frame_id;
             g_CANx_SendBuffer.ECU_SendBuff[g_CANx_SendBuffer.ECU_SendBuff_RPointer].frame_id = 0;
@@ -403,10 +406,10 @@ int16_t Check_CANSendBuffer(MSCAN_ChannelTypeDef CANx, MSCAN_MessageTypeDef* CAN
             g_CANx_SendBuffer.Charger_SendBuff_RPointer = 0;
         }
         
-        if (g_CANx_SendBuffer.Charger_SendBuff[g_CANx_SendBuffer.Charger_SendBuff_RPointer].frametype != 0) 
+        if (g_CANx_SendBuffer.Charger_SendBuff[g_CANx_SendBuffer.Charger_SendBuff_RPointer].frametype != (MSCAN_FrameAndIDTypeDef)0) 
         {
             CAN_RMessage->frametype = g_CANx_SendBuffer.Charger_SendBuff[g_CANx_SendBuffer.Charger_SendBuff_RPointer].frametype;
-            g_CANx_SendBuffer.Charger_SendBuff[g_CANx_SendBuffer.Charger_SendBuff_RPointer].frametype = 0;
+            g_CANx_SendBuffer.Charger_SendBuff[g_CANx_SendBuffer.Charger_SendBuff_RPointer].frametype = (MSCAN_FrameAndIDTypeDef)0;
             
             CAN_RMessage->frame_id  = g_CANx_SendBuffer.Charger_SendBuff[g_CANx_SendBuffer.Charger_SendBuff_RPointer].frame_id;
             g_CANx_SendBuffer.Charger_SendBuff[g_CANx_SendBuffer.Charger_SendBuff_RPointer].frame_id = 0;

@@ -49,9 +49,6 @@ void interrupt VectorNumber_Vrti RTI_ISR(void)
     
     MSCAN_MessageTypeDef S_Message;
     MSCAN_ModuleConfig CANx_Module;
-    
-    CANx_Module.ch   = MSCAN_Channel0;
-    CANx_Module.pins = MSCAN0_PM0_PM1;
    
 	if (CRGFLG_RTIF)
 	{
@@ -67,11 +64,48 @@ void interrupt VectorNumber_Vrti RTI_ISR(void)
 		{
 		    Time_Count = 0;
 		    
+		    CANx_Module.ch   = MSCAN_Channel0;
+            CANx_Module.pins = MSCAN0_PM0_PM1;
+            
 		    /* Checking whether CAN module have enough TX buffer to send CAN message. */
 		    if (MSCAN_HardTxBufferCheck(MSCAN_Channel0) == 0) 
 		    {
     		    /* Checking soft CAN TX buffer have valid CAN message. */
     		    ret_val = Check_CANSendBuffer(MSCAN_Channel0, &S_Message);
+    		    
+    		    /* If yes,load the read CAN message and send it. */
+    		    if (ret_val == 0) 
+    		    {
+    		        (void)MSCAN_SendFrame(&CANx_Module, &S_Message);
+    		    } 		        
+		    }
+		    
+		    
+		    CANx_Module.ch   = MSCAN_Channel1;
+            CANx_Module.pins = MSCAN1_PM2_PM3;
+            
+		    /* Checking whether CAN module have enough TX buffer to send CAN message. */
+		    if (MSCAN_HardTxBufferCheck(MSCAN_Channel1) == 0) 
+		    {
+    		    /* Checking soft CAN TX buffer have valid CAN message. */
+    		    ret_val = Check_CANSendBuffer(MSCAN_Channel1, &S_Message);
+    		    
+    		    /* If yes,load the read CAN message and send it. */
+    		    if (ret_val == 0) 
+    		    {
+    		        (void)MSCAN_SendFrame(&CANx_Module, &S_Message);
+    		    } 		        
+		    }
+		    
+		    
+		    CANx_Module.ch   = MSCAN_Channel4;
+            CANx_Module.pins = MSCAN4_PM4_PM5;
+            
+		    /* Checking whether CAN module have enough TX buffer to send CAN message. */
+		    if (MSCAN_HardTxBufferCheck(MSCAN_Channel4) == 0) 
+		    {
+    		    /* Checking soft CAN TX buffer have valid CAN message. */
+    		    ret_val = Check_CANSendBuffer(MSCAN_Channel4, &S_Message);
     		    
     		    /* If yes,load the read CAN message and send it. */
     		    if (ret_val == 0) 

@@ -412,7 +412,6 @@ interrupt void MSCAN0Receive_Handler(void)
             g_CANx_RecBuffer.Intranet_RecBuff_WPointer = 0;
         }
 
-        g_CANx_RecBuffer.Intranet_RecBuf[g_CANx_RecBuffer.Intranet_RecBuff_WPointer].frametype = R_Message.frametype;
         g_CANx_RecBuffer.Intranet_RecBuf[g_CANx_RecBuffer.Intranet_RecBuff_WPointer].frame_id  = R_Message.frame_id;
         
         if ((R_Message.frametype == DataFrameWithStandardId)
@@ -425,6 +424,8 @@ interrupt void MSCAN0Receive_Handler(void)
                 g_CANx_RecBuffer.Intranet_RecBuf[g_CANx_RecBuffer.Intranet_RecBuff_WPointer].data[j] = R_Message.data[j]; 
             }
         }
+        
+        g_CANx_RecBuffer.Intranet_RecBuf[g_CANx_RecBuffer.Intranet_RecBuff_WPointer].frametype = R_Message.frametype;
 
         g_CANx_RecBuffer.Intranet_RecBuff_WPointer++;
     }
@@ -462,7 +463,6 @@ interrupt void MSCAN1Receive_Handler(void)
             g_CANx_RecBuffer.ECU_RecBuff_WPointer = 0;
         }
 
-        g_CANx_RecBuffer.ECU_RecBuf[g_CANx_RecBuffer.ECU_RecBuff_WPointer].frametype = R_Message.frametype;
         g_CANx_RecBuffer.ECU_RecBuf[g_CANx_RecBuffer.ECU_RecBuff_WPointer].frame_id  = R_Message.frame_id;
         
         if ((R_Message.frametype == DataFrameWithStandardId)
@@ -476,6 +476,8 @@ interrupt void MSCAN1Receive_Handler(void)
             }
         }
 
+        g_CANx_RecBuffer.ECU_RecBuf[g_CANx_RecBuffer.ECU_RecBuff_WPointer].frametype = R_Message.frametype;
+        
         g_CANx_RecBuffer.ECU_RecBuff_WPointer++;
     }
 
@@ -512,7 +514,6 @@ interrupt void MSCAN4Receive_Handler(void)
             g_CANx_RecBuffer.Charger_RecBuff_WPointer = 0;
         }
 
-        g_CANx_RecBuffer.Charger_RecBuf[g_CANx_RecBuffer.Charger_RecBuff_WPointer].frametype = R_Message.frametype;
         g_CANx_RecBuffer.Charger_RecBuf[g_CANx_RecBuffer.Charger_RecBuff_WPointer].frame_id  = R_Message.frame_id;
         
         if ((R_Message.frametype == DataFrameWithStandardId)
@@ -526,6 +527,8 @@ interrupt void MSCAN4Receive_Handler(void)
             }
         }
 
+        g_CANx_RecBuffer.Charger_RecBuf[g_CANx_RecBuffer.Charger_RecBuff_WPointer].frametype = R_Message.frametype;
+        
         g_CANx_RecBuffer.Charger_RecBuff_WPointer++;
     }
 
